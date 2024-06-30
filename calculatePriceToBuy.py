@@ -43,6 +43,8 @@ output = {
     "items": []
 }
 
+def remove_color_codes(text):
+    return re.sub(r'§.', '', text)
 def find_item_in_bazaar(input_item, item_info, search_main):
     if not search_main:
         split_item = input_item.split(":")
@@ -56,6 +58,7 @@ def find_item_in_bazaar(input_item, item_info, search_main):
         if not search_main:
             item_info["inputs"].append({
                 "name": normalized_input_item,
+                "nameClear":"Coins",
                 "found_in": "bazaar",
                 "quantity": quantity,
                 "sell_price": quantity,
@@ -69,10 +72,15 @@ def find_item_in_bazaar(input_item, item_info, search_main):
         product_data = bazaar_data["products"][normalized_input_item]
         sell_price = product_data["quick_status"]["sellPrice"]
         buy_price = product_data["quick_status"]["buyPrice"]
+        id_to_name = {item['id']: item['name'] for item in names_data}
+        if normalized_input_item in id_to_name:
+            nameClear = remove_color_codes(id_to_name[normalized_input_item])
+        
 
         if not search_main:
             item_info["inputs"].append({
                 "name": normalized_input_item,
+                "nameClear": nameClear,
                 "found_in": "bazaar",
                 "quantity": quantity,
                 "sell_price": (quantity * float(sell_price)),
@@ -86,8 +94,7 @@ def find_item_in_bazaar(input_item, item_info, search_main):
         return True
     return False
 
-def remove_color_codes(text):
-    return re.sub(r'§.', '', text)
+
 
 def remove_reforge_prefix(item_name):
     for reforge in reforges_data.values():
@@ -125,8 +132,12 @@ def find_item_in_auction(input_item, item_info, search_main):
 
     if found_in_auctions:
         if not search_main:
+            id_to_name = {item['id']: item['name'] for item in names_data}
+            if normalized_input_item in id_to_name:
+                nameClear = remove_color_codes(id_to_name[normalized_input_item])
             item_info["inputs"].append({
                 "name": normalized_input_item,
+                "nameClear": nameClear,
                 "found_in": "auctions",
                 "quantity": quantity,
                 "sell_price": lowest_starting_bid,
@@ -148,8 +159,14 @@ def search_main_item(input_item, item_info, search_main):
                 normalized_input_item = split_item[0]
                 quantity = float(split_item[1])
 
+                id_to_name = {item['id']: item['name'] for item in names_data}
+                if normalized_input_item in id_to_name:
+                    nameClear = remove_color_codes(id_to_name[normalized_input_item])
+
+
                 item_info["inputs"].append({
                     "name": normalized_input_item,
+                    "nameClear": nameClear,
                     "found_in": "none",
                     "quantity": quantity,
                     "sell_price": "price not found",
@@ -177,8 +194,13 @@ async def start_calculation():
                         itemHOTM = 0
                 else:
                     itemHOTM = 0
+                normalized_input_item = item["internalname"]
+                id_to_name = {item['id']: item['name'] for item in names_data}
+                if normalized_input_item in id_to_name:
+                    normalized_input_item = remove_color_codes(id_to_name[normalized_input_item])
                 item_info = {
                     "internalname": item["internalname"],
+                    "name": normalized_input_item,
                     "inputs": [],
                     "costToBuy": 0,
                     "sellTheItemsPrice": 0,
