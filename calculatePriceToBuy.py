@@ -6,7 +6,7 @@ import aiofiles
 import time
 
 forge_json_path = "./ForgeData/forgable_items.json"
-auction_json_path = "./DataAPI/ActiveAuction.json"
+auction_json_path = "./DataAPI/Auctions"
 bazaar_json_path = "./DataAPI/Bazaar.json"
 reforges_json_path = "./DataAPI/reforges.json"
 item_json_path = "./DataAPI/Items.json"
@@ -25,15 +25,25 @@ async def load_json(path):
 async def load_jsons():
     global items_data, bazaar_data, auctions_data, reforges_data, names_data, desired_internalnames
 
-    items_data, bazaar_data, auctions_data, reforges_data, names_data = await asyncio.gather(
+    # Laden der restlichen JSON-Dateien
+    items_data, bazaar_data, reforges_data, names_data = await asyncio.gather(
         load_json(forge_json_path),
         load_json(bazaar_json_path),
-        load_json(auction_json_path),
         load_json(reforges_json_path),
         load_json(item_json_path)
     )
 
-    auctions_data = auctions_data["auctions"]
+    # Laden der Auctions-Daten aus dem Verzeichnis
+    auctions_data = []
+
+    auction_files = os.listdir("./DataAPI/Auctions")
+    for file in auction_files:
+        if file.endswith(".json"):
+            path = os.path.join("./DataAPI/Auctions", file)
+            auction_data = await load_json(path)
+            auctions_data.extend(auction_data["auctions"])
+
+    # Filtern der Namen-Daten
     names_data = names_data["items"]
     desired_internalnames = [item["internalname"] for item in items_data if "internalname" in item]
 
@@ -222,5 +232,7 @@ async def start_calculation():
     output["lastTimeUpdate"] = time.time()
     async with aiofiles.open('DataAPI/dataprice.json', 'w') as json_file:
         await json_file.write(json.dumps(output, indent=4))
+        
+
 
 

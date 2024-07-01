@@ -50,7 +50,7 @@ async def startfilter(htomlv, budget, minprofit, bzcut, auction_cut):
     await load_jsons()
 
     # Check if data needs to be updated
-    if time.time() - price_data.get("lastTimeUpdate", 0) >= 300:
+    if time.time() - price_data.get("lastTimeUpdate", 0) >= 3:
         await PullAPI.UpdateAPI()
         await calculatePriceToBuy.start_calculation()
         await load_jsons()
